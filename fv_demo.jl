@@ -36,5 +36,5 @@ sol = solve(ode, Tsit5(), saveat=LinRange(tspan[1], tspan[2], 50))
     t = sol.t[i]
     plot(x, sol.u[i])
     plot!(x, u0.(x))
-    plot!(ylims=(-.5, 1.5), leg=false, title="Time = $t")
+    plot!(ylims = extrema(u0.(x)) .+ (-0.5, 0.5), leg=false, title="Time = $t")
 end

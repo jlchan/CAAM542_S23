@@ -33,5 +33,5 @@ Vp = vandermonde(Line(), N, xp) / VDM
     t = sol.t[i]
     plot(xp, Vp * sol.u[i])
     plot!(xp, u0.(xp))
-    plot!(ylims=(-.5, 1.5), leg=false, title="Time = $t")
+    plot!(ylims = extrema(u0.(x)) .+ (-0.5, 0.5), leg=false, title="Time = $t")
 end

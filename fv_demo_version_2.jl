@@ -57,5 +57,5 @@ plot!(vec(x), vec(u0.(x)), leg=false)
     t = sol.t[i]
     plot(vec(x), vec(sol.u[i]))
     plot!(vec(x), vec(u0.(x)))
-    plot!(ylims=(-.5, 1.5), leg=false, title="Time = $t")
+    plot!(ylims = extrema(u0.(x)) .+ (-0.5, 0.5), leg=false, title="Time = $t")
 end
