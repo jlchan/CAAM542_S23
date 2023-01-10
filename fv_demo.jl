@@ -12,7 +12,7 @@ x = 0.5 * (vertices[1:end-1] + vertices[2:end])
 
 # create initial condition
 # u0(x) = sin(pi * x)
-u0(x) = exp(-25 * sin(x)^2)
+u0(x) = exp(-25 * x^2)
 u = u0.(x) 
 
 flux(u_l, u_r) = 0.5 * (u_l + u_r)
@@ -31,9 +31,6 @@ tspan = (0, 8.0)
 params = (; h)
 ode = ODEProblem(rhs!, u, tspan, params)
 sol = solve(ode, Tsit5(), saveat=LinRange(tspan[1], tspan[2], 50))
-
-plot(x, sol.u[end])
-plot!(x, u0.(x), leg=false)
 
 @gif for i in eachindex(sol.u)
     t = sol.t[i]
