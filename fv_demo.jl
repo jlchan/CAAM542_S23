@@ -32,12 +32,14 @@ tspan = (0, 2.0)
 params = (; h)
 ode = ODEProblem(rhs!, u, tspan, params)
 
-# Tsit5 is a good "default" ODE solver for our systems. For more details, see
+# Tsit5() and RK4() are good "default" ODE solver for our systems. For more details, see
 # https://docs.sciml.ai/DiffEqDocs/stable/solvers/ode_solve/#Non-Stiff-Problems
-sol = solve(ode, Tsit5(), saveat=LinRange(tspan[1], tspan[2], 100))
+sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 100))
 
-plot(x, sol.u[end])
-plot!(x, u0.(x))
+Linf_error = maximum(abs.(sol.u[end] - u0.(x)))
+plot(x, sol.u[end], label = "Finite volume solution")
+plot!(x, u0.(x), label = "Exact solution")
+title!("Error = $Linf_error")
 
 # # create a movie
 # @gif for i = 1:length(sol.u)
