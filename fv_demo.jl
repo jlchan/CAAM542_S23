@@ -1,7 +1,7 @@
 using OrdinaryDiffEq
 using Plots
 
-N = 100
+N = 1000
 vertices = LinRange(-1, 1, N+1)
 
 # compute grid spacing and cell centers
