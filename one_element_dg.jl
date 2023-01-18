@@ -3,7 +3,7 @@ using NodesAndModes
 using Plots
 
 # polynomial degree
-N = 25
+N = 75
 
 # Chebyshev nodes: "good" points for interpolation
 x = [-cos(k * pi / N) for k in 0:N] 
@@ -12,34 +12,52 @@ x = [-cos(k * pi / N) for k in 0:N]
 VDM, dVdx = basis(Line(), N, x) # VDM = V in the notes
 D = dVdx / VDM # note that A / B = A * inv(B)
 
+xq, wq = gauss_quad(0, 0, N)
+
+# transform to nodal basis
+Vq, Vxq = basis(Line(), N, xq) 
+Vq = Vq / VDM 
+Vxq = Vxq / VDM
+
+M = Vq' * diagm(wq) * Vq
+QTr = Vxq' * diagm(wq) * Vq
+Q = QTr'
+
+
 function rhs!(du, u, parameters, t)
-    D = parameters.D
+    (; M, Q) = parameters
 
-    # a hacky way to enforce periodic boundary conditions
-    u[1] = u[end] 
+    # enforce periodic BCs using central fluxes
+    u_left = -0.5 * (u[1] + u[end])
+    u_right = 0.5 * (u[1] + u[end])
 
-    du .= -D * u
+    # M * du/dt - Q'*u + [-{u}; 0, ..., 0; {u}] = 0
+    du .= -Q' * u
+    du[1] += u_left
+    du[end] += u_right
+
+    du .= -(M \ du)
 end
 
 # u0(x) = sin(pi * x)
 u0(x) = exp(-25 * x^2)
-u0(x) = abs(x) < 0.5
+# u0(x) = abs(x) < 0.5
 
 u = u0.(x)
-params = (; D)
+params = (; M, Q)
 tspan = (0.0, 2.0)
 ode = ODEProblem(rhs!, u, tspan, params)
 sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50))
 
+Linf_error = maximum(abs.(sol.u[end] - u0.(x)))
+plot(x, sol.u[end], label = "One-element DG solution", marker=:dot)
+plot!(x, u0.(x), label = "Exact solution")
+title!("Error = $Linf_error")
+
 # interpolation to equispaced plotting nodes
-x̃ = LinRange(-1, 1, 100)
+x̃ = LinRange(-1, 1, 200)
 Ṽ, _ = basis(Line(), N, x̃) 
 Vinterp = Ṽ / VDM
-
-Linf_error = maximum(abs.(Vinterp * sol.u[end] - u0.(x̃)))
-plot(x̃, Vinterp * sol.u[end], label = "Pseudospectral solution", marker=:dot)
-plot!(x̃, u0.(x̃), label = "Exact solution")
-title!("Error = $Linf_error")
 
 # @show Linf_error = maximum(abs.(Vp * sol.u[end] - u0.(xp)))
 @gif for i in eachindex(sol.u)
