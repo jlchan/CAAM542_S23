@@ -3,7 +3,7 @@ using NodesAndModes
 using Plots
 
 # polynomial degree
-N = 25
+N = 75
 
 # Chebyshev nodes: "good" points for interpolation
 x = [-cos(k * pi / N) for k in 0:N] 

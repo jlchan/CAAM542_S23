@@ -13,26 +13,23 @@ VDM, dVdx = basis(Line(), N, x) # VDM = V in the notes
 D = dVdx / VDM # note that A / B = A * inv(B)
 
 xq, wq = gauss_quad(0, 0, N)
-
-# transform to nodal basis
-Vq, Vxq = basis(Line(), N, xq) 
-Vq = Vq / VDM 
-Vxq = Vxq / VDM
+Vq, _ = basis(Line(), N, xq) 
+Vq = Vq / VDM # Vq = Vinterp
 
 M = Vq' * diagm(wq) * Vq
-QTr = Vxq' * diagm(wq) * Vq
+QTr = D' * M
 Q = QTr'
-
 
 function rhs!(du, u, parameters, t)
     (; M, Q) = parameters
 
+    # M * du/dt - Q'*u + [-{u}; 0, ..., 0; {u}] = 0
+    # du/dt = -inv(M) * (- Q'*u + [-{u}; 0, ..., 0; {u}])
+    du .= -Q' * u
+
     # enforce periodic BCs using central fluxes
     u_left = -0.5 * (u[1] + u[end])
     u_right = 0.5 * (u[1] + u[end])
-
-    # M * du/dt - Q'*u + [-{u}; 0, ..., 0; {u}] = 0
-    du .= -Q' * u
     du[1] += u_left
     du[end] += u_right
 
@@ -41,7 +38,7 @@ end
 
 # u0(x) = sin(pi * x)
 u0(x) = exp(-25 * x^2)
-# u0(x) = abs(x) < 0.5
+u0(x) = abs(x) < 0.5
 
 u = u0.(x)
 params = (; M, Q)
