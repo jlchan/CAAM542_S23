@@ -31,13 +31,14 @@ x = zeros(N+1, num_elements)
 for e in 1:num_elements    
     @. x[:,e] = VX[e] + h * 0.5 * (1 + r)
 end
-J = h / 2
+J = h / 2 * ones(N+1, num_elements)
 
 # outward normals on each element
 nx = zeros(2, num_elements)
 nx[1, :] .= -1
 nx[2, :] .= 1
 
+# create node mappings
 mapM = reshape(1:2*num_elements, 2, num_elements)
 mapP = copy(mapM)
 mapP[2, 1] = mapM[1, 2]
@@ -63,7 +64,7 @@ function rhs!(du, u, parameters, t)
 
     # enforce periodic BCs using central fluxes
     u_flux = flux.(uP, uM, nx) - uM .* nx
-    du .= -(D * u + LIFT * u_flux) / J
+    du .= -(D * u + LIFT * u_flux) ./ J
 end
 
 # u0(x) = sin(pi * x)
