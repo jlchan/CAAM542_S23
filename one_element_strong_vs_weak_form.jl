@@ -11,7 +11,6 @@ x = [-cos(k * pi / N) for k in 0:N]
 # create the nodal differentiation matrix
 VDM, dVdx = basis(Line(), N, x) # VDM = V in the notes
 D = dVdx / VDM # note that A / B = A * inv(B)
-
 xq, wq = gauss_quad(0, 0, N)
 Vq, _ = basis(Line(), N, xq) 
 Vq = Vq / VDM # Vq = Vinterp
