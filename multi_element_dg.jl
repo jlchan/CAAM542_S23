@@ -3,7 +3,7 @@ using NodesAndModes
 using Plots
 
 # polynomial degree
-N = 5
+N = 4
 
 # Chebyshev nodes: "good" points for interpolation
 r = [-cos(k * pi / N) for k in 0:N] 
@@ -53,11 +53,12 @@ end
 mapP[1, 1] = mapM[2, num_elements]
 mapP[2, num_elements] = mapM[1, 1]
 
+# upwind flux
 flux(uP, uM, nx) = 0.5 * (uP + uM) * nx - 0.5 * (uP - uM)
 
 # strong form
 function rhs!(du, u, parameters, t)
-    (; D, LIFT, nx, mapP) = parameters
+    (; Vf, D, LIFT, nx, mapP) = parameters
 
     uM = Vf * u
     uP = uM[mapP]
@@ -72,7 +73,7 @@ u0(x) = exp(-25 * x^2)
 u0(x) = abs(x) < 0.5
 
 u = u0.(x)
-params = (; D, LIFT, nx, mapP)
+params = (; Vf, D, LIFT, nx, mapP)
 tspan = (0.0, 2.0)
 ode = ODEProblem(rhs!, u, tspan, params)
 sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50))
