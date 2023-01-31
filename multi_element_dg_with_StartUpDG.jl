@@ -9,8 +9,6 @@ rd = RefElemData(Line(), N)
 md = MeshData(uniform_mesh(Line(), num_elements)..., rd)
 md = make_periodic(md)
 
-flux(uP, uM, nx) = 0.5 * (uP + uM) * nx - 0.5 * (uP - uM)
-
 # strong form
 function rhs!(du, u, parameters, t)
     (; rd, md) = parameters
@@ -21,14 +19,13 @@ function rhs!(du, u, parameters, t)
     uP = uM[mapP]
 
     # enforce periodic BCs using central fluxes
-    u_flux = flux.(uP, uM, nx) - uM .* nx
+    u_flux = @. 0.5 * (uP - uM) * nx - 0.5 * (uP - uM)
     du .= -(Dr * u + LIFT * u_flux) ./ J
 end
 
 # u0(x) = sin(pi * x)
 # u0(x) = exp(-25 * x^2)
-# u0(x) = abs(x) < 0.5
-u0(x) = exp(-10 * sin(pi * x)^2)
+u0(x) = abs(x) < 0.5
 
 (; x) = md
 u = u0.(x)
