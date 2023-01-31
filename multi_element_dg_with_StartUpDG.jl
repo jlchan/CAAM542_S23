@@ -3,8 +3,8 @@ using StartUpDG
 using Plots
 
 # polynomial degree
-N = 5
-num_elements = 16
+N = 4
+num_elements = 40
 rd = RefElemData(Line(), N)
 md = MeshData(uniform_mesh(Line(), num_elements)..., rd)
 md = make_periodic(md)
@@ -26,17 +26,20 @@ function rhs!(du, u, parameters, t)
 end
 
 # u0(x) = sin(pi * x)
-u0(x) = exp(-25 * x^2)
+# u0(x) = exp(-25 * x^2)
 # u0(x) = abs(x) < 0.5
+u0(x) = exp(-10 * sin(pi * x)^2)
 
 (; x) = md
 u = u0.(x)
 params = (; rd, md)
-tspan = (0.0, 2.0)
+tspan = (0.0, 1.7)
 ode = ODEProblem(rhs!, u, tspan, params)
 sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50))
 
-# # @show Linf_error = maximum(abs.(Vp * sol.u[end] - u0.(xp)))
+@show Linf_error = maximum(abs.(rd.Vp * sol.u[end] - u0.(rd.Vp * x .- sol.t[end])))
+
+
 @gif for i in eachindex(sol.u)
     t = sol.t[i]
     plot(rd.Vp * x, rd.Vp * sol.u[i])
