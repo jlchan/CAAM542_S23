@@ -1,4 +1,3 @@
-using OrdinaryDiffEq
 using StartUpDG
 using Plots
 
@@ -29,7 +28,7 @@ function compute_DG_matrix(N, num_elements)
     A = zeros((N+1) * num_elements, (N+1) * num_elements)
     u = zeros(N+1, num_elements)
     du = similar(u)
-    for i in (N+1) * num_elements
+    for i in 1:(N+1) * num_elements
         u[i] = 1
         rhs!(du, u, params, 0.0)
         A[:,i] .= vec(du)
@@ -38,6 +37,8 @@ function compute_DG_matrix(N, num_elements)
 
     return A
 end
+
+A = compute_DG_matrix(3, 8)
 
 spectral_radius(N, num_elements) = 
     maximum(abs.(eigvals(compute_DG_matrix(N, num_elements))))
