@@ -23,7 +23,6 @@ function rhs!(dU, U, parameters, t)
     p_flux = @. 0.5 * (uP - uM) * nx - 0.5 * (pP - pM)
     u_flux = @. 0.5 * (pP - pM) * nx - 0.5 * (uP - uM)
 
-    # enforce periodic BCs using central fluxes
     dU[:, :, 1] .= -(Dr * u + LIFT * p_flux) ./ J
     dU[:, :, 2] .= -(Dr * p + LIFT * u_flux) ./ J
 end
