@@ -3,22 +3,27 @@ using StartUpDG
 using Plots
 
 # polynomial degree
-N = 4
-num_elements = 32
+N = 3
+num_elements = 40
 rd = RefElemData(Line(), N)
 md = MeshData(uniform_mesh(Line(), num_elements)..., rd)
-md = make_periodic(md)
+# md = make_periodic(md)
+
+pBC(t) = .1 * sin(2 * pi * t)
 
 # strong form
 function rhs!(dU, U, parameters, t)
     (; rd, md) = parameters
     (; Vf, Dr, LIFT) = rd
-    (; nx, J, mapP) = md
+    (; nx, J, mapP, mapB) = md
 
     p, u = U[:, :, 1], U[:, :, 2]
 
     pM, uM = Vf * p, Vf * u
     pP, uP = pM[mapP], uM[mapP]
+
+    # impose boundary condition on p
+    @. pP[mapB] = 2 * pBC(t) - pM[mapB]
 
     p_flux = @. 0.5 * (uP - uM) * nx - 0.5 * (pP - pM)
     u_flux = @. 0.5 * (pP - pM) * nx - 0.5 * (uP - uM)
@@ -33,7 +38,7 @@ u0(x) = 0
 (; x) = md
 u = [p0.(x) ;;; u0.(x)]
 params = (; rd, md)
-tspan = (0.0, 2.0)
+tspan = (0.0, 5.0)
 ode = ODEProblem(rhs!, u, tspan, params)
 sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50))
 
