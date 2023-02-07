@@ -18,7 +18,7 @@ function rhs!(du, u, parameters, t)
     p, u, v = view(u, :, :, 1), view(u, :, :, 2), view(u, :, :, 3)
 
     pM, uM, vM = Vf * p, Vf * u, Vf * v
-    pP, uP, vP = pM[mapP], uM[mapP], vM[mapP]
+    pP, uP, vP = view(pM, mapP), view(uM, mapP), view(vM, mapP)
 
     p_flux = @. 0.5 * ((uP - uM) * nx + (vP - vM) * ny) - 0.5 * (pP - pM)
     u_flux = @. 0.5 * (pP - pM) * nx - 0.5 * (uP - uM)
@@ -30,8 +30,8 @@ function rhs!(du, u, parameters, t)
     dudxJ = rxJ .* (Dr * u) + sxJ .* (Ds * u)
     dvdyJ = ryJ .* (Dr * v) + syJ .* (Ds * v)
     du[:, :, 1] .= -(dudxJ + dvdyJ + LIFT * (p_flux .* Jf)) ./ J
-    du[:, :, 2] .= -(dpdxJ + LIFT * (u_flux .* Jf)) ./ J
-    du[:, :, 3] .= -(dpdyJ + LIFT * (v_flux .* Jf)) ./ J
+    du[:, :, 2] .= -(dpdxJ         + LIFT * (u_flux .* Jf)) ./ J
+    du[:, :, 3] .= -(dpdyJ         + LIFT * (v_flux .* Jf)) ./ J
 end
 
 p0(x, y) = exp(-100 * ((x - 0.25)^2 + y^2)) # assume u0, v0 = 0
@@ -43,7 +43,10 @@ u[:, :, 1] .= p0.(x, y)
 params = (; rd, md)
 tspan = (0.0, 2)
 ode = ODEProblem(rhs!, u, tspan, params)
-sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50))
+
+include("alive.jl") # defines AliveCallback for monitoring progress
+sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50), 
+            callback=AliveCallback(alive_interval=10))
 
 # scatter(vec(rd.Vp * x), vec(rd.Vp * y), zcolor=vec(rd.Vp * sol.u[end]), 
 #         markersize=2, markerstrokewidth=0, legend=false)

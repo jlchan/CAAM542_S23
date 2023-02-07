@@ -32,7 +32,10 @@ u = rd.Pq * u0.(xq, yq)
 params = (; rd, md)
 tspan = (0.0, 2)
 ode = ODEProblem(rhs!, u, tspan, params)
-sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50))
+
+include("alive.jl") # defines AliveCallback for monitoring progress
+sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 50), 
+            callback=AliveCallback(alive_interval=10))
 
 scatter(vec(rd.Vp * x), vec(rd.Vp * y), zcolor=vec(rd.Vp * sol.u[end]), 
         markersize=2, markerstrokewidth=0, legend=false)
