@@ -19,8 +19,8 @@ function rhs!(du, u, parameters, t)
 
     uM = Vf * u
     uP = uM[mapP]
-
     u_flux = @. 0.5 * (uP - uM) * nx - 0.5 * (uP - uM)
+    
     du .= -(Dr * u + LIFT * u_flux) ./ J
 end
 
