@@ -30,7 +30,7 @@ tspan = (0.0, .01)
 ode = ODEProblem(rhs!, u, tspan, params)
 
 include("alive.jl") # defines an AliveCallback to monitor solve progress
-sol = solve(ode, ROCK4(), saveat=LinRange(tspan[1], tspan[2], 100), 
+sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 100), 
             callback=AliveCallback(alive_interval=10))
 
 plot(md.x, sol.u[1], leg=false, ylims=(-.1, .3))
