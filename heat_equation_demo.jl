@@ -1,5 +1,6 @@
 using StartUpDG
 using OrdinaryDiffEq
+using Plots
 
 function rhs!(du, u, parameters, t)
     (; rd, md) = parameters
