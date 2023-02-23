@@ -1,4 +1,5 @@
 using StartUpDG
+using OrdinaryDiffEq
 
 function rhs!(du, u, parameters, t)
     (; rd, md) = parameters
