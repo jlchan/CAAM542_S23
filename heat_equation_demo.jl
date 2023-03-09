@@ -10,17 +10,18 @@ function rhs!(du, u, parameters, t)
     uM = Vf * u
     uP = uM[mapP]
     uP[md.mapB] .= -uM[md.mapB] # enforce {u} = 0 => u⁺ + u⁻ = 0 => u⁺ = -u⁻
+
     u_flux = @. 0.5 * (uP - uM) * nx
     sigma = (Dr * u + LIFT * u_flux) ./ J
 
     sigmaM = Vf * sigma
     sigmaP = sigmaM[mapP]
-    sigma_flux = @. 0.5 * (sigmaP - sigmaM) * nx + 100 * (uP - uM)
+    sigma_flux = @. 0.5 * (sigmaP - sigmaM) * nx + (uP - uM)
     du .= (Dr * sigma + LIFT * sigma_flux) ./ J
 end
 
 N = 1
-num_elements = 32
+num_elements = 8
 rd = RefElemData(Line(), N)
 md = MeshData(uniform_mesh(Line(), num_elements)..., rd)
 
@@ -54,6 +55,7 @@ function build_rhs_matrix(rhs!, u_size)
     return A
 end
 
-M = md.J[1, 1] * kron(I(md.num_elements), rd.M)
-K = M * build_rhs_matrix(rhs!, size(u))
-lambda, W = eigen(K)
+A = build_rhs_matrix(rhs!, size(u))
+# M = md.J[1, 1] * kron(I(md.num_elements), rd.M)
+# K = M * build_rhs_matrix(rhs!, size(u))
+# lambda, W = eigen(K)
