@@ -2,6 +2,24 @@ using OrdinaryDiffEq
 using StartUpDG
 using Plots
 
+# strong form
+function rhs!(du, u, parameters, t)
+    (; a, rd, md) = parameters # rd = parameters.rd, md = parameters.md
+    (; Pq, Vq, Vf, Dr, LIFT) = rd
+    (; nx, J, mapP) = md
+
+    f = Pq * ((Vq * a) .* (Vq * u)) # projection of (au)
+    # aM = Vf * a
+    uM = Vf * u
+    uP = uM[mapP]
+    fM = Vf * f
+    fP = fM[mapP]
+    #flux = @. (0.5 * aM * (uP + uM) - fM) * nx 
+    flux = @. 0.5 * (fP - fM) * nx - 0.5 * (uP - uM)
+    
+    du .= -(Dr * f + LIFT * flux) ./ J
+end
+
 N = 4 # polynomial degree
 num_elements = 16
 
@@ -9,30 +27,15 @@ rd = RefElemData(Line(), N)
 md = MeshData(uniform_mesh(Line(), num_elements), rd)
 md = make_periodic(md)
 
-# strong form
-function rhs!(du, u, parameters, t)
-    (; a, rd, md) = parameters # rd = parameters.rd, md = parameters.md
-    (; Vf, Dr, LIFT) = rd
-    (; nx, J, mapP) = md
-
-    f = a .* u 
-    fM = Vf * f
-    fP = fM[mapP]
-    flux = @. 0.5 * (fP - fM) * nx 
-    
-    du .= -(Dr * f + LIFT * (flux)) ./ J
-end
-
-# u0(x) = sin(8 * pi * x)
+# u0(x) = sin(pi * x)
 u0(x) = exp(-25 * x^2)
-# u0(x) = abs(x) < 0.5
-# u0(x) = exp(-10 * sin(pi * x)^2) # exact solution: u0(x - t)
 
 (; x) = md
 u = u0.(x)
-a = @. exp(-sin(pi * x)^2) #(1 - x^2)^5 + 1 
+a = @. exp(-sin(pi * x)^2) 
+
 params = (; rd, md, a)
-tspan = (0.0, 10)
+tspan = (0.0, 15)
 ode = ODEProblem(rhs!, u, tspan, params)
 sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 100))
 

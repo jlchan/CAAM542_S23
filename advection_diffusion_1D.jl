@@ -11,7 +11,7 @@ function rhs!(du, u, parameters, t)
     uP = uM[mapP]
 
     # advection part
-    uP[1] = 0.0
+    uP[1] = -uM[1] # inflow condition
     u_flux = @. 0.5 * (uP - uM) * nx - 0.5 * (uP - uM)    
     du .= -(Dr * u + LIFT * u_flux) ./ J
 
@@ -29,7 +29,6 @@ function rhs!(du, u, parameters, t)
     du .+= 1.0
 end
 
-
 N = 3
 num_elements = 32
 rd = RefElemData(Line(), N)
@@ -37,11 +36,11 @@ rd = RefElemData(Line(), N)
 @. VX = 0.5 * (1 + VX) # transform the domain to [0, 1]
 md = MeshData(VX, EToV, rd)
 
-epsilon = 0.1
+epsilon = 1e-3
 params = (; rd, md, epsilon)
 (; x) = md
 u = @. 0 * x
-tspan = (0.0, 5.0)
+tspan = (0.0, 4.0)
 ode = ODEProblem(rhs!, u, tspan, params)
 
 u_exact(x, epsilon) = x - (exp(-(1-x) / epsilon) - exp(-1 / epsilon)) / (1 - exp(-1/epsilon))
@@ -52,3 +51,9 @@ sol = solve(ode, ROCK4(), saveat=LinRange(tspan[1], tspan[2], 100),
 
 u_ex = u_exact.(rd.Vp * md.x, epsilon)
 plot(rd.Vp * md.x, rd.Vp * sol.u[end] - u_ex, leg=false)
+
+@gif for i in eachindex(sol.u)
+    t = sol.t[i]
+    plot(rd.Vp * x, rd.Vp * sol.u[i])
+    plot!(ylims = extrema(sol.u[end]) .+ (-0.5, 0.5), leg=false, title="Time = $t")
+end
