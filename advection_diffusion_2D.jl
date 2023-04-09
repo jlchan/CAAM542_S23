@@ -10,7 +10,6 @@ function rhs!(du, u, parameters, t)
 
     uM = Vf * u
     uP = uM[mapP]
-    u_jump = uP - uM
     
     dudr = Dr * u
     duds = Ds * u
@@ -19,6 +18,7 @@ function rhs!(du, u, parameters, t)
     bx, by = 1, 2 # β vector 
     b_n = bx * nx + by * ny
     uP[map_inflow] .= -uM[map_inflow]
+    u_jump = uP - uM
     u_flux = @. 0.5 * u_jump * b_n - 0.5 * abs(b_n) * u_jump
     dudxJ = rxJ .* dudr + sxJ .* duds
     dudyJ = ryJ .* dudr + syJ .* duds
@@ -31,8 +31,8 @@ function rhs!(du, u, parameters, t)
     sigma_y = (dudyJ + LIFT * (0.5 * u_jump .* nyJ)) ./ J
 
     sigmaM_n = nx .* (Vf * sigma_x) + ny .* (Vf * sigma_y)
-    sigmaP_n = -sigmaM_n[mapP]
-    sigmaP_n[md.mapB] .= sigmaM_n[md.mapB]
+    sigmaP_n = -sigmaM_n[mapP] # flip sign for exterior normal
+    sigmaP_n[md.mapB] .= sigmaM_n[md.mapB] # reset exterior value of sigmaP_n to enforce σ⁺ = σ⁻.
     sigma_flux = @. 0.5 * (sigmaP_n - sigmaM_n) + u_jump
 
     d_sigma_x_dx_J = rxJ .* (Dr * sigma_x) + sxJ .* (Ds * sigma_x)
