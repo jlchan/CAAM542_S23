@@ -2,3 +2,5 @@
 NodesAndModes = "7aca2e03-f7e2-4192-9ec8-f4ca66d597fb"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 StartUpDG = "472ebc20-7c99-4d4b-9470-8fde4e9faa0f"
+Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
+TriplotRecipes = "808ab39a-a642-4abf-81ff-4cb34ebbffa3"
