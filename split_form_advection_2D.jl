@@ -15,13 +15,15 @@ function rhs!(du, u, parameters, t)
 
     uM = Vf * u
     uP = uM[mapP]
-    u_flux = @. 0.5 * (b_n * uP) - 0.5 * abs(b_n) * (uP - uM)
+    u_flux = @. 0.5 * (b_n * uP) #- 0.5 * abs(b_n) * (uP - uM)
     
     uq = Vq * u
-    dfxdr = 0.5 * (Dr_weak * (b_x .* uq) + Pq * (b_x .* (Vq * Dr * u)))
-    dfxds = 0.5 * (Ds_weak * (b_x .* uq) + Pq * (b_x .* (Vq * Ds * u)))    
-    dfydr = 0.5 * (Dr_weak * (b_y .* uq) + Pq * (b_y .* (Vq * Dr * u)))
-    dfyds = 0.5 * (Ds_weak * (b_y .* uq) + Pq * (b_y .* (Vq * Ds * u)))
+    bxu = Pq * (b_x .* uq)
+    byu = Pq * (b_y .* uq)
+    dfxdr = 0.5 * (Dr_weak * (bxu) + Pq * (b_x .* (Vq * Dr * u)))
+    dfxds = 0.5 * (Ds_weak * (bxu) + Pq * (b_x .* (Vq * Ds * u)))    
+    dfydr = 0.5 * (Dr_weak * (byu) + Pq * (b_y .* (Vq * Dr * u)))
+    dfyds = 0.5 * (Ds_weak * (byu) + Pq * (b_y .* (Vq * Ds * u)))
     dfxdxJ = rxJ .* dfxdr + sxJ .* dfxds
     dfydyJ = ryJ .* dfydr + syJ .* dfyds
     du .= -(dfxdxJ + dfydyJ + LIFT * (u_flux .* Jf)) ./ J
@@ -48,8 +50,9 @@ b_x_fun(x, y, t) = sin(pi * x) * cos(pi * y) * cos(pi / 5 * t)
 b_y_fun(x, y, t) = -cos(pi * x) * sin(pi * y) * cos(pi / 5 * t)
 
 # compute weak diff operators
-Dr_weak = rd.M \ (-rd.Dr' * rd.M * rd.Pq)
-Ds_weak = rd.M \ (-rd.Ds' * rd.M * rd.Pq)
+(; M, Dr, Ds) = rd
+Dr_weak = M \ (-Dr' * M)
+Ds_weak = M \ (-Ds' * M)
 
 params = (; rd, md, Dr_weak, Ds_weak, b_x_fun, b_y_fun)
 tspan = (0.0, 10.0)
@@ -73,14 +76,8 @@ up = rd.Vp * sol.u[end-15]
 plist = [TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)]
 plot(plist, clims=(-.1, .1))
 
-# scatter(vec(rd.Vp * x), vec(rd.Vp * y), zcolor=vec(rd.Vp * (sol.u[end]-sol.u[1])),
-#         markersize=4, markerstrokewidth=0, legend=false, colorbar=true)
-# xp, yp = vec(rd.Vp * x), vec(rd.Vp * y)
-
-@gif for i in eachindex(sol.u)
-    t = sol.t[i]
-    up = rd.Vp * sol.u[i]
-    plot([TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)], clims=extrema(sol.u[1]))
-    # scatter(xp, yp, zcolor=vec(rd.Vp * sol.u[i]), 
-    #         markersize=2, markerstrokewidth=0, legend=false, clims=extrema(sol.u[1]))
-end fps=10
+# @gif for i in eachindex(sol.u)
+#     t = sol.t[i]
+#     up = rd.Vp * sol.u[i]
+#     plot([TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)], clims=extrema(sol.u[1]))
+# end fps=10
