@@ -2,7 +2,7 @@ using StartUpDG
 using OrdinaryDiffEq
 using Plots
 
-function rhs!(d2u, du, u, parameters, t)
+function rhs!(d2u, du, u, parameters, t) # BR-1 discretization
     (; rd, md) = parameters
     (; Vf, Dr, LIFT) = rd
     (; nx, J, mapP) = md
@@ -30,7 +30,7 @@ params = (; rd, md)
 u = @. exp(-25 * x^2)
 du = zeros(size(x))
 
-# estimate 
+# estimate dt 
 h = minimum(md.J) / 2
 dt = 0.5 * h
 

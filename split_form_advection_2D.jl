@@ -15,7 +15,7 @@ function rhs!(du, u, parameters, t)
 
     uM = Vf * u
     uP = uM[mapP]
-    u_flux = @. 0.5 * (b_n * uP) #- 0.5 * abs(b_n) * (uP - uM)
+    u_flux = @. 0.5 * (b_n * uP) - 0.5 * abs(b_n) * (uP - uM)
     
     uq = Vq * u
     bxu = Pq * (b_x .* uq)
@@ -29,8 +29,8 @@ function rhs!(du, u, parameters, t)
     du .= -(dfxdxJ + dfydyJ + LIFT * (u_flux .* Jf)) ./ J
 end
 
-N = 7 # polynomial degree
-num_elements = 8
+N = 1 # polynomial degree
+num_elements = 29
 
 rd = RefElemData(Tri(), N)
 (VX, VY), EToV = uniform_mesh(Tri(), num_elements)
@@ -46,8 +46,8 @@ md = make_periodic(md)
 u = @. exp(-100 * ((x - 0.75)^2 + (y - 0.75)^2))
 
 # rotating flow
-b_x_fun(x, y, t) = sin(pi * x) * cos(pi * y) * cos(pi / 5 * t)
-b_y_fun(x, y, t) = -cos(pi * x) * sin(pi * y) * cos(pi / 5 * t)
+b_x_fun(x, y, t) = sin(pi * x) * cos(pi * y)  #* cos(pi / 5 * t)
+b_y_fun(x, y, t) = -cos(pi * x) * sin(pi * y) #* cos(pi / 5 * t)
 
 # compute weak diff operators
 (; M, Dr, Ds) = rd
@@ -72,12 +72,12 @@ tri = triout.trianglelist
 using TriplotRecipes: TriPseudocolor
 xp, yp = rd.Vp * x, rd.Vp * y
 
-up = rd.Vp * sol.u[end-15]
-plist = [TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)]
-plot(plist, clims=(-.1, .1))
+# up = rd.Vp * sol.u[end-15]
+# plist = [TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)]
+# plot(plist, clims=(-.1, .1))
 
-# @gif for i in eachindex(sol.u)
-#     t = sol.t[i]
-#     up = rd.Vp * sol.u[i]
-#     plot([TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)], clims=extrema(sol.u[1]))
-# end fps=10
+@gif for i in eachindex(sol.u)
+    t = sol.t[i]
+    up = rd.Vp * sol.u[i]
+    plot([TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)], clims=extrema(sol.u[1]))
+end fps=10

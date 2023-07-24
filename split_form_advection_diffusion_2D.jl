@@ -43,7 +43,7 @@ function rhs!(du, u, parameters, t)
 end
 
 N = 3 # polynomial degree
-num_elements = 16
+num_elements = 32
 
 rd = RefElemData(Tri(), N)
 md = MeshData(uniform_mesh(Tri(), num_elements), rd)
@@ -54,7 +54,7 @@ md = MeshData(uniform_mesh(Tri(), num_elements), rd)
 
 u = zeros(rd.Np, md.num_elements)
 
-epsilon = 0.01
+epsilon = 0.001
 
 # rotating flow
 b_x_fun(x, y, t) = 2 * y * (1 - x^2)
@@ -77,12 +77,22 @@ include("alive.jl") # defines an AliveCallback to monitor solve progress
 sol = solve(ode, RK4(), saveat=LinRange(tspan[1], tspan[2], 100), 
             callback=AliveCallback(alive_interval=25))
 
-scatter(vec(rd.Vp * x), vec(rd.Vp * y), zcolor=vec(rd.Vp * sol.u[end]), 
-        markersize=2, markerstrokewidth=0, legend=false, colorbar=true)
+# create a subtriangulation for plotting            
+using Triangulate
+triin = Triangulate.TriangulateIO()
+triin.pointlist = hcat(rd.rp, rd.sp)'
+triout, _ = triangulate("cQ", triin)
+tri = triout.trianglelist
 
-# xp, yp = vec(rd.Vp * x), vec(rd.Vp * y)
+using TriplotRecipes: TriPseudocolor
+xp, yp = rd.Vp * x, rd.Vp * y
+
+up = rd.Vp * sol.u[end]
+plist = [TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)]
+plot(plist)
+
 # @gif for i in eachindex(sol.u)
 #     t = sol.t[i]
-#     scatter(xp, yp, zcolor=vec(rd.Vp * sol.u[i]), 
-#         markersize=2, markerstrokewidth=0, legend=false)
-# end
+#     up = rd.Vp * sol.u[i]
+#     plot([TriPseudocolor(xp[:,i], yp[:,i], up[:,i], tri) for i in axes(xp, 2)], clims=extrema(sol.u[end]))
+# end fps=10

@@ -1,11 +1,11 @@
 using StartUpDG
-using OrdinaryDiffEq
 using Plots
 
-function rhs!(du, u, parameters, t) # BR1 with penalty
-    (; rd, md) = parameters
+# BR1 with penalty
+function rhs_BR1!(du, u, parameters, t) 
+    (; rd, md, alpha) = parameters
     (; Vf, Dr, LIFT) = rd
-    (; nx, J, mapP) = md
+    (; nx, J, mapP) = md    
 
     uM = Vf * u
     uP = uM[mapP]
@@ -16,8 +16,8 @@ function rhs!(du, u, parameters, t) # BR1 with penalty
 
     sigmaM = Vf * sigma
     sigmaP = sigmaM[mapP]
-    sigma_flux = @. 0.5 * (sigmaP - sigmaM) * nx + (uP - uM)
-    du .= (Dr * sigma + LIFT * sigma_flux) ./ J
+    sigma_flux = @. 0.5 * (sigmaP + sigmaM) * nx + alpha * (uP - uM)
+    du .= (Dr * sigma + LIFT * (sigma_flux - (Vf * sigma) .* nx)) ./ J
 end
 
 function rhs_IPDG!(du, u, parameters, t)
@@ -60,7 +60,8 @@ function build_rhs_matrix(N::Int, num_elements::Int, rhs!, parameters=(; ))
     return M * A
 end
 
-N = 1
+N = 2
 num_elements = 8
-K = build_rhs_matrix(N, num_elements, rhs_IPDG!, (; alpha = 0))
-# [eigvals(build_rhs_matrix(N, num_elements, rhs_IPDG!, (; alpha = alpha))) for alpha in LinRange(0, 10 * num_elements, 10)]
+K_IPDG = build_rhs_matrix(N, num_elements, rhs_IPDG!, (; alpha = 100))
+K_BR1 = build_rhs_matrix(N, num_elements, rhs_BR1!, (; alpha = 1))
+# K_eigs = [eigvals(build_rhs_matrix(N, num_elements, rhs_IPDG!, (; alpha = alpha))) for alpha in LinRange(0, 10 * num_elements, 10)]
